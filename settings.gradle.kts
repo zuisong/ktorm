@@ -1,6 +1,7 @@
 
 include("ktorm-core")
 include("ktorm-global")
+include("ktorm-dsl")
 include("ktorm-jackson")
 include("ktorm-support-mysql")
 include("ktorm-support-oracle")
