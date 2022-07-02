@@ -19,6 +19,7 @@ package org.ktorm.dsl
 import org.ktorm.database.*
 import org.ktorm.expression.*
 import org.ktorm.schema.*
+import java.sql.*
 
 /**
  * [Query] is an abstraction of query operations and the core class of Ktorm's query DSL.
@@ -177,6 +178,20 @@ public inline fun Query.whereWithConditions(block: (MutableList<ColumnDeclaring<
         return this.where { conditions[0] }
     }
 }
+
+
+/**
+ * The [ResultSet] object of this query, lazy initialized after first access, obtained from the database by
+ * executing the generated SQL.
+ *
+ * Note that the return type of this property is not a normal [ResultSet], but a [QueryRowSet] instead. That's
+ * a special implementation provided by Ktorm, different from normal result sets, it is available offline and
+ * overrides the indexed access operator. More details can be found in the documentation of [QueryRowSet].
+ */
+public fun Query.executeQuery(): Pair<String, List<ArgumentExpression<*>>> {
+   return dsl.formatExpression(expression)
+}
+
 
 /**
  * Create a mutable list, then add filter conditions to the list in the given callback function, finally combine

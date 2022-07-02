@@ -99,42 +99,6 @@ public fun QuerySource.rightJoin(right: BaseTable<*>, on: ColumnDeclaring<Boolea
     )
 }
 
-/**
- * Return a new-created [Query] object, left joining all the reference tables, and selecting all columns of them.
- */
-public fun QuerySource.joinReferencesAndSelect(): Query {
-    val joinedTables = ArrayList<BaseTable<*>>()
-
-    return sourceTable
-        .joinReferences(this, joinedTables)
-        .select(joinedTables.flatMap { it.columns })
-}
-
-private fun BaseTable<*>.joinReferences(
-    querySource: QuerySource,
-    joinedTables: MutableList<BaseTable<*>>
-): QuerySource {
-
-    var curr = querySource
-
-    joinedTables += this
-
-    for (column in columns) {
-        for (binding in column.allBindings) {
-            if (binding is ReferenceBinding) {
-                val refTable = binding.referenceTable
-                val pk = refTable.singlePrimaryKey {
-                    "Cannot reference the table '$refTable' as there is compound primary keys."
-                }
-
-                curr = curr.leftJoin(refTable, on = column eq pk)
-                curr = refTable.joinReferences(curr, joinedTables)
-            }
-        }
-    }
-
-    return curr
-}
 
 private infix fun ColumnDeclaring<*>.eq(column: ColumnDeclaring<*>): BinaryExpression<Boolean> {
     return BinaryExpression(BinaryExpressionType.EQUAL, asExpression(), column.asExpression(), BooleanSqlType)

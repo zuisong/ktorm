@@ -17,31 +17,6 @@
 package org.ktorm.schema
 
 import org.ktorm.expression.*
-import kotlin.reflect.*
-
-/**
- * Base class of column bindings. A column might be bound to a simple property, nested properties,
- * or a reference to another table.
- */
-public sealed class ColumnBinding
-
-/**
- * Bind the column to nested properties, eg. `employee.manager.department.id`.
- *
- * @property properties the nested properties, cannot be empty.
- */
-public data class NestedBinding(val properties: List<KProperty1<*, *>>) : ColumnBinding()
-
-/**
- * Bind the column to a reference table, equivalent to a foreign key in relational databases.
- * Entity sequence APIs would automatically left join all references (recursively) by default.
- *
- * @property referenceTable the reference table.
- * @property onProperty the property used to hold the referenced entity object.
- * @see org.ktorm.entity.sequenceOf
- * @see BaseTable.createEntity
- */
-public data class ReferenceBinding(val referenceTable: BaseTable<*>, val onProperty: KProperty1<*, *>) : ColumnBinding()
 
 /**
  * Common interface of [Column] and [ScalarExpression].
@@ -88,24 +63,11 @@ public data class Column<T : Any>(
     val name: String,
 
     /**
-     * The column's primary binding. A column might be bound to a simple property, nested properties,
-     * or a reference to another table, null if the column doesn't bind to any property.
-     */
-    val binding: ColumnBinding? = null,
-
-    /**
-     * The column's extra bindings. Useful when we need to configure two or more bindings for a column.
-     *
-     * @since 2.6
-     */
-    val extraBindings: List<ColumnBinding> = emptyList(),
-
-    /**
      * The [SqlType] of this column or expression.
      */
-    override val sqlType: SqlType<T>
+    override val sqlType: SqlType<T>,
 
-) : ColumnDeclaring<T> {
+    ) : ColumnDeclaring<T> {
 
     /**
      * The column's label, used to identify the selected columns and to obtain query results.
@@ -116,18 +78,6 @@ public data class Column<T : Any>(
      * @see ColumnDeclaringExpression
      */
     val label: String get() = toString(separator = "_")
-
-    /**
-     * Return all the bindings of this column, including the primary [binding] and [extraBindings].
-     */
-    val allBindings: List<ColumnBinding> get() = binding?.let { listOf(it) + extraBindings } ?: emptyList()
-
-    /**
-     * If the column is bound to a reference table, return the table, otherwise return null.
-     *
-     * Shortcut for `(binding as? ReferenceBinding)?.referenceTable`.
-     */
-    val referenceTable: BaseTable<*>? get() = (binding as? ReferenceBinding)?.referenceTable
 
     /**
      * Convert this column to a [ColumnExpression].

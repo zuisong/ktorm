@@ -167,12 +167,6 @@ public abstract class BaseTable<E : Any>(
         }
     }
 
-    private fun <C : Any> Column<C>.checkTransformable() {
-        if (binding != null || extraBindings.isNotEmpty()) {
-            throw IllegalStateException("Cannot transform a column after its bindings are configured.")
-        }
-    }
-
     /**
      * Transform the registered column's [SqlType] to another. The transformed [SqlType] has the same `typeCode` and
      * `typeName` as the underlying one, and performs the specific transformations on column values.
@@ -197,60 +191,10 @@ public abstract class BaseTable<E : Any>(
         toUnderlyingValue: (R) -> C
     ): Column<R> {
         checkRegistered()
-        checkTransformable()
 
         val result = Column(table, name, sqlType = sqlType.transform(fromUnderlyingValue, toUnderlyingValue))
         _columns[name] = result
         return result
-    }
-
-    /**
-     * Configure the binding of the registered column. Note that this function is only used internally by the Ktorm
-     * library and its extension modules. Others should not use this function directly.
-     */
-    @PublishedApi
-    internal fun <C : Any> Column<C>.doBindInternal(binding: ColumnBinding): Column<C> {
-        checkRegistered()
-        checkConflictBinding(binding)
-
-        val b = when (binding) {
-            is NestedBinding -> binding
-            is ReferenceBinding -> {
-                checkReferencePrimaryKey(binding.referenceTable)
-                checkCircularReference(binding.referenceTable)
-                ReferenceBinding(copyReferenceTable(binding.referenceTable), binding.onProperty)
-            }
-        }
-
-        val result = if (this.binding == null) this.copy(binding = b) else this.copy(extraBindings = extraBindings + b)
-        _columns[name] = result
-        return result
-    }
-
-    private fun <C : Any> Column<C>.checkConflictBinding(binding: ColumnBinding) {
-        for (column in _columns.values) {
-            val hasConflict = when (binding) {
-                is NestedBinding ->
-                    column.allBindings
-                        .filterIsInstance<NestedBinding>()
-                        .filter { it.properties == binding.properties }
-                        .any()
-                is ReferenceBinding ->
-                    column.allBindings
-                        .filterIsInstance<ReferenceBinding>()
-                        .filter { it.referenceTable.tableName == binding.referenceTable.tableName }
-                        .filter { it.referenceTable.catalog == binding.referenceTable.catalog }
-                        .filter { it.referenceTable.schema == binding.referenceTable.schema }
-                        .filter { it.onProperty == binding.onProperty }
-                        .any()
-            }
-
-            if (hasConflict) {
-                throw IllegalStateException(
-                    "Column '$name' and '${column.name}' are bound to the same property. Please check your code."
-                )
-            }
-        }
     }
 
     private fun checkReferencePrimaryKey(refTable: BaseTable<*>) {
@@ -265,25 +209,6 @@ public abstract class BaseTable<E : Any>(
                 "Cannot reference the table '$refTable' because it has compound primary keys."
             )
         }
-    }
-
-    private fun checkCircularReference(root: BaseTable<*>, stack: LinkedList<String> = LinkedList()) {
-        stack.push(root.toString(withAlias = false))
-
-        if (tableName == root.tableName && catalog == root.catalog && schema == root.catalog) {
-            throw IllegalStateException(
-                "Circular reference detected, current table: '$this', reference route: ${stack.asReversed()}"
-            )
-        }
-
-        for (column in root.columns) {
-            val ref = column.referenceTable
-            if (ref != null) {
-                checkCircularReference(ref, stack)
-            }
-        }
-
-        stack.pop()
     }
 
     /**
@@ -315,23 +240,13 @@ public abstract class BaseTable<E : Any>(
         _primaryKeyNames.addAll(src._primaryKeyNames)
 
         for ((name, column) in src._columns) {
-            val binding = column.binding?.let { copyBinding(it) }
-            val extraBindings = column.extraBindings.map { copyBinding(it) }
-            _columns[name] = column.copy(table = this, binding = binding, extraBindings = extraBindings)
+            _columns[name] = column.copy(table = this)
         }
     }
 
     private fun copyReferenceTable(table: BaseTable<*>): BaseTable<*> {
         RefCounter.setContextCounter(_refCounter)
         return table.aliased("_ref${_refCounter.getAndIncrement()}")
-    }
-
-    private fun copyBinding(binding: ColumnBinding): ColumnBinding {
-        if (binding is ReferenceBinding) {
-            return binding.copy(referenceTable = copyReferenceTable(binding.referenceTable))
-        } else {
-            return binding
-        }
     }
 
     /**
