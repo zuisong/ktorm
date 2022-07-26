@@ -430,6 +430,24 @@ class CommonTest : BaseMySqlTest() {
     }
 
     @Test
+    fun `test Update With Alias`() {
+        val t = object : Table<Department>("t_department", alias = "t_d",schema = databaseName) {
+            val id = int("id").primaryKey().bindTo { it.id }
+            val name = varchar("name").bindTo { it.name }
+        }
+
+        database.updateWithAlias(t) {
+            set(it.name, "test")
+            where {
+                it.id eq 1
+            }
+        }
+
+        assert(database.sequenceOf(t).filter { it.id eq 1 }.mapTo(HashSet()) { it.name } == setOf("test"))
+        assert(database.sequenceOf(t.aliased("t")).mapTo(HashSet()) { it.name } == setOf("test", "finance"))
+    }
+
+    @Test
     fun testMaxColumnNameLength() {
         val t = object : Table<Nothing>("t_long_name") {
             val col = varchar("a".repeat(database.maxColumnNameLength))
