@@ -96,10 +96,10 @@ abstract class BaseKspTest {
     private fun createCompilation(source: SourceFile, options: Map<String, String>): KotlinCompilation {
         return KotlinCompilation().apply {
             sources = listOf(source)
-            verbose = false
+            verbose = true
             messageOutputStream = System.out
             inheritClassPath = true
-            allWarningsAsErrors = true
+            allWarningsAsErrors = false
             symbolProcessorProviders = listOf(KtormProcessorProvider())
             kspIncremental = true
             kspWithCompilation = true

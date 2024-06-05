@@ -15,6 +15,7 @@ include("ktorm-support-oracle")
 include("ktorm-support-postgresql")
 include("ktorm-support-sqlite")
 include("ktorm-support-sqlserver")
+include("ktorm-ksp-ext:ktorm-ksp-sequence-batch")
 
 rootProject.name = "ktorm"
 rootProject.children.forEach { project ->
