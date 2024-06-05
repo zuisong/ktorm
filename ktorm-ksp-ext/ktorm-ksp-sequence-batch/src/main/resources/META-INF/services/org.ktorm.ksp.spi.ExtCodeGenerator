@@ -1,0 +1,2 @@
+org.ktorm.ksp.compiler.generator.SequenceAddAllFunctionGenerator
+org.ktorm.ksp.compiler.generator.SequenceUpdateAllFunctionGenerator
