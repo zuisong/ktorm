@@ -196,9 +196,9 @@ internal object TableClassGenerator {
         for (column in table.columns) {
             val parameter = constructorParams[column.entityProperty.simpleName.asString()] ?: continue
             if (parameter._type.isMarkedNullable) {
-                add("%N·=·row[this.%N],", parameter.name!!.asString(), column.columnPropertyName)
+                add("%N·=·row[this.%N],\n", parameter.name!!.asString(), column.columnPropertyName)
             } else {
-                add("%N·=·row[this.%N]!!,", parameter.name!!.asString(), column.columnPropertyName)
+                add("%N·=·row[this.%N]!!,\n", parameter.name!!.asString(), column.columnPropertyName)
             }
         }
 

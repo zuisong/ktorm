@@ -42,12 +42,12 @@ internal class KtLintCodeFormatter(val environment: SymbolProcessorEnvironment) 
         try {
             // Manually fix some code styles before formatting.
             val snippet = code
-                .replace(Regex("""\(\s*"""), "(")
-                .replace(Regex("""\s*\)"""), ")")
-                .replace(Regex(""",\s*"""), ", ")
-                .replace(Regex(""",\s*\)"""), ")")
-                .replace(Regex("""\s+get\(\)\s="""), " get() =")
-                .replace(Regex("""\s+=\s+"""), " = ")
+//                .replace(Regex("""\(\s*"""), "(")
+//                .replace(Regex("""\s*\)"""), ")")
+//                .replace(Regex(""",\s*"""), ", ")
+//                .replace(Regex(""",\s*\)"""), ")")
+//                .replace(Regex("""\s+get\(\)\s="""), " get() =")
+//                .replace(Regex("""\s+=\s+"""), " = ")
                 .replace("import org.ktorm.ksp.`annotation`", "import org.ktorm.ksp.annotation")
 
             return ktLintRuleEngine.format(Code.fromSnippet(snippet))
